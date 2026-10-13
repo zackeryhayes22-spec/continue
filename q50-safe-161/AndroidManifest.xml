@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.q50.factory.safe"
-    android:versionCode="16200"
-    android:versionName="1.6.2-probe">
+    android:versionCode="16100"
+    android:versionName="1.6.1-safe">
     <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="10" />
     <uses-permission android:name="com.ygomi.permission.IVI_CAN_READ" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <application android:label="Q50 OS Probe 1.6.2" android:allowBackup="false">
+    <application android:label="Q50 OS Safe 1.6.1" android:allowBackup="false">
         <meta-data android:name="ivi.isDistractive" android:value="false" />
         <meta-data android:name="ivi.shortcut" android:value="true" />
         <meta-data android:name="ivi.audio" android:value="false" />
@@ -14,7 +14,7 @@
         <meta-data android:name="ivi.Disclaimer" android:value="false" />
         <meta-data android:name="ivi.supportDisplay" android:value="ALL" />
         <meta-data android:name="ivi.defaultDisplay" android:value="LOWER" />
-        <activity android:name=".MainActivity" android:label="Q50 OS Probe 1.6.2" android:screenOrientation="landscape">
+        <activity android:name=".MainActivity" android:label="Q50 OS Safe 1.6.1" android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
