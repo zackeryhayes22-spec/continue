@@ -1,10 +1,11 @@
-name: Q50 Factory InTouch Build
+name: Q50 Safe 1.6.1 Build
 on:
   push:
     branches:
       - build/q50-factory-intouch-20261013
     paths:
       - q50-src-parts/**
+      - q50-safe-161/**
       - .github/workflows/q50-factory-build.yml
   workflow_dispatch:
 
@@ -14,14 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reassemble staged factory source
+      - name: Reassemble EPK tooling and OBU certificate
         run: |
           test "$(find q50-src-parts -type f -name '*.b64' | wc -l)" -eq 7
           cat q50-src-parts/*.b64 > /tmp/q50-source.b64
           test "$(wc -c < /tmp/q50-source.b64)" -eq 20220
-          mkdir -p q50-factory
-          base64 -d /tmp/q50-source.b64 | tar -xz -C q50-factory
-          find q50-factory -maxdepth 3 -type f -print
+          mkdir -p q50-base
+          base64 -d /tmp/q50-source.b64 | tar -xz -C q50-base
+          test -f q50-base/tools/epk_tool.py
+          test -f q50-base/keys/obu_cert.pem
 
       - uses: actions/setup-java@v4
         with:
@@ -34,10 +36,7 @@ jobs:
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(command -v sdkmanager)"
-          fi
-          echo "SDK manager: $SDKMANAGER"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$(command -v sdkmanager)"; fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" 'platforms;android-34' 'build-tools;34.0.0' 'platform-tools'
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
@@ -46,34 +45,29 @@ jobs:
       - name: Install EPK dependency
         run: python -m pip install cryptography
 
-      - name: Build factory APK and EPK packages
-        working-directory: q50-factory
+      - name: Build safe native API-10 APK and one-block EPK
+        working-directory: q50-safe-161
         run: bash build.sh
 
-      - name: Verify APK signatures and manifests
+      - name: Independent artifact verification
         run: |
           BT="$ANDROID_HOME/build-tools/34.0.0"
-          for apk in q50-factory/out/*.apk; do
-            echo "== $apk =="
-            "$BT/apksigner" verify --verbose --min-sdk-version 10 "$apk"
-            "$BT/aapt" dump badging "$apk" | grep -E 'package:|sdkVersion|targetSdkVersion|launchable-activity'
-          done
-
-      - name: Verify EPK envelopes
-        run: |
+          "$BT/apksigner" verify --verbose --min-sdk-version 10 q50-safe-161/out/Q50-OS-SAFE-1.6.1.apk
+          "$BT/aapt" dump badging q50-safe-161/out/Q50-OS-SAFE-1.6.1.apk | grep -E 'package:|sdkVersion|targetSdkVersion|launchable-activity'
           python - <<'PY'
-          import glob, struct, os
-          for p in glob.glob('q50-factory/out/*.epk'):
-              b=open(p,'rb').read()
-              assert b[:4] == b'.epk', p
-              ver, typ, blocks, keysize=struct.unpack('>HHHH', b[4:12])
-              assert ver == 2 and typ == 2 and keysize > 0
-              print(os.path.basename(p), 'version=',ver,'type=',typ,'blocks=',blocks,'keysize=',keysize,'bytes=',len(b))
+          import struct
+          p='q50-safe-161/out/Q50-OS-SAFE-1.6.1.epk'
+          b=open(p,'rb').read(); assert b[:4]==b'.epk'
+          ver,typ,blocks,keysize=struct.unpack('>HHHH',b[4:12])
+          assert (ver,typ,blocks)==(2,2,1)
+          assert keysize>0
+          print('verified EPK v2 type2 one-block bytes=',len(b))
           PY
+          (cd q50-safe-161/out && sha256sum -c SHA256SUMS.txt)
 
-      - name: Upload factory release
+      - name: Upload safe recovery release
         uses: actions/upload-artifact@v4
         with:
-          name: q50-factory-intouch
-          path: q50-factory/out/*
+          name: q50-os-safe-1.6.1
+          path: q50-safe-161/out/*
           if-no-files-found: error
