@@ -24,7 +24,7 @@ javac --release 8 -g -d "$OUT/classes" -classpath "$ANDJAR" src/com/q50/factory/
 "$APKSIGNER" sign --ks "$KEYSTORE" --ks-pass pass:android --key-pass pass:android --min-sdk-version 10 --v1-signing-enabled true --v2-signing-enabled false --v3-signing-enabled false --out "$OUT/Q50-OS-SAFE-1.6.1.apk" "$OUT/app.aligned.apk"
 "$APKSIGNER" verify --verbose --min-sdk-version 10 "$OUT/Q50-OS-SAFE-1.6.1.apk" | tee "$OUT/APK-VERIFY.txt"
 "$AAPT" dump badging "$OUT/Q50-OS-SAFE-1.6.1.apk" | grep -E 'package:|sdkVersion|targetSdkVersion|launchable-activity' | tee "$OUT/APK-BADGING.txt"
-python "$EPK" build "$OUT/Q50-OS-SAFE-1.6.1.apk" "$OUT/Q50-OS-SAFE-1.6.1.epk" --cert "$CERT"
+python "$EPK" --cert "$CERT" "$OUT/Q50-OS-SAFE-1.6.1.apk" "$OUT/Q50-OS-SAFE-1.6.1.epk"
 python - "$OUT/Q50-OS-SAFE-1.6.1.epk" <<'PY' | tee "$OUT/EPK-VERIFY.txt"
 import sys,struct,os
 p=sys.argv[1]; b=open(p,'rb').read(); assert b[:4]==b'.epk'
