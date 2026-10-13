@@ -4,7 +4,7 @@ on:
     branches:
       - build/q50-factory-intouch-20261013
     paths:
-      - q50-factory-src.tgz.b64
+      - q50-factory-source.tgz.b64
       - .github/workflows/q50-factory-build.yml
   workflow_dispatch:
 
@@ -17,7 +17,7 @@ jobs:
       - name: Unpack staged factory source
         run: |
           mkdir -p q50-factory
-          base64 -d q50-factory-src.tgz.b64 | tar -xz -C q50-factory
+          base64 -d q50-factory-source.tgz.b64 | tar -xz -C q50-factory
           find q50-factory -maxdepth 3 -type f -print
 
       - uses: actions/setup-java@v4
