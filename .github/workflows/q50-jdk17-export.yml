@@ -1,0 +1,29 @@
+name: Q50 JDK17 Export
+on:
+  push:
+    branches:
+      - build/q50-factory-intouch-20261013
+    paths:
+      - .github/workflows/q50-jdk17-export.yml
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Archive JDK17
+        shell: bash
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          tar -C "$JAVA_HOME" -czf /tmp/q50-jdk17.tar.gz .
+          ls -lh /tmp/q50-jdk17.tar.gz
+      - name: Upload JDK17
+        uses: actions/upload-artifact@v4
+        with:
+          name: q50-jdk17
+          path: /tmp/q50-jdk17.tar.gz
+          if-no-files-found: error
